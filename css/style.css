@@ -52,8 +52,8 @@
 
   /* Tavolo (la "plancia" dove metterai carte / UI) */
   .table {
-    width: min(1100px, 95vw);
-    height: min(640px, 75vh);
+    width: min(95%, 120vw);
+    height: min(95%, 120vh);
     border-radius: 18px;
     position: relative;
     z-index: 10;

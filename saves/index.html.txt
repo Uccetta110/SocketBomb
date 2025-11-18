@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>ScopaMania</title>
+</head>
+<body>
+    <div class="table" role="main" aria-label="Tavolo di gioco ScopaMania">
+        <div class="felt">
+          <div class="hand" aria-hidden="true">
+            <div class="card" >A</div>
+            <div class="card">10</div>
+            <div class="card">Q</div>
+          </div>
+          <div class="center-text" style="position:absolute; top:12px; left:16px;">ScopaMania</div>
+        </div>
+      </div>
+</body>
+</html>
