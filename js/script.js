@@ -3,7 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const ServerBtn = document.getElementById("serverBtn");
     const ClientBtn = document.getElementById("clientBtn");
 
-    //script elementi html
+    //Stato user
+    let user = {
+        isServer: false,
+        isClient: false,
+        userCode: "",
+        userName: "User",
+    }
     ServerBtn.addEventListener("click", () => {
         console.log("Server button clicked");
     });
@@ -11,4 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ClientBtn.addEventListener("click", () => {
         console.log("Client button clicked");
     });
+
+    const initialize = () => {
+        const uniqueCode = crypto.randomUUID();
+
+        ;
+        console.log("Document has been opened and initialized.");
+        user.userCode = "user"+uniqueCode;
+        console.log(user.userCode)
+    };
+
+    initialize();
 });
