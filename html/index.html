@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- script.js-->
-    <script src="../js/script.js" defer></script>
-    <link rel="stylesheet" href="../css/style.css">
+    <!-- Include Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Include script.js -->
+    <script type="module" src="/js/script.js" defer></script>
+    <!-- Include style.css -->
+    <link rel="stylesheet" href="/css/style.css">
     <title>ScopaMania</title>
 </head>
 <body>
     <div class="table" role="main" aria-label="Tavolo di gioco ScopaMania">
-    <button id="serverBtn">
-        <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Server</label>
-        
-    </button>
-    <button id="clientBtn">
-        <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Client</label>
-    </button>
-      </div>
+        <button id="serverBtn">
+            <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Server</label>
+        </button>
+        <button id="clientBtn">
+            <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Client</label>
+        </button>
+    </div>
 </body>
 </html>
