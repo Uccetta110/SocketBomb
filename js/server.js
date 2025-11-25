@@ -18,12 +18,27 @@ app.get('/', (req, res) => {
 // Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('A user connected');
+  io.emit('server message', 'Welcome to the server!');
 
   // Handle client test event
   socket.on('client test', (msg) => {
     console.log('Client test message received:', msg);
     // Optionally, broadcast the message to all clients
     io.emit('server response', `Server received: ${msg}`);
+  });
+
+  socket.on('client message', (msg) => {
+    console.log("Message from server: " + msg);
+    let msgName = 'client message';
+
+    switch (msg)
+    {
+        case "Welcome to the server!":
+            user.isClient = true;
+            socket.emit(msgName, "this client ip is " + user.userCode);
+        break;
+    }
+       
   });
 
   // Handle disconnection
