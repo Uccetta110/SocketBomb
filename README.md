@@ -43,7 +43,9 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 ---
 
 ### 🔴 Errori Server (20N)
-*(non definiti al momento)*
+| Codice | Descrizione |
+|--------|-------------|
+| **201** | `user not found` |
 
 ---
 
