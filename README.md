@@ -32,7 +32,7 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 | **001** | `Welcome to the server!` |
 | **002** | `is your IP: <user.ipClient>` |
 | **003** | `username saved: <userName>` |
-| **004** | `004 new userName saved: + <userName>` |
+| **004** | `new userName saved: + <userName>` |
 
 ---
 
