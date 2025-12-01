@@ -40,6 +40,8 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 |--------|-------------|
 | **101** | `this client ip is: <user.ipClient> | this client code is: <user.userCode>` |
 | **102** | `yes, that's my ip` |
+| **103** | `my new username is: + <username>` |
+| **104** | `104 join room code: + <room.code>` |
 
 ---
 
