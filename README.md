@@ -33,6 +33,10 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 | **002** | `is your IP: <user.ipClient>` |
 | **003** | `username saved: <userName>` |
 | **004** | `new userName saved: + <userName>` |
+| **005** | `new room added: + <room.code>` |
+| **006** | `broadcast nuova stanza: + <room.code>` |
+| **007** | `broadcast join stanza: + <room.code>` |
+| **008** | `broadcast player count per stanza: + <room.code> + <playerCount>` |
 
 ---
 
