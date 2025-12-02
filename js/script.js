@@ -28,13 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let room = {
     code: -1,
     players: [],
+    playerCount: 0,
     turnIndex: -1,
     turnCode: "",
     time: null,
     state: "not ready",
   };
 
-  let roomList = [];
+  var roomList = [];
 
   // Funzione per aggiungere una stanza alla UI
   function addRoomToUI(roomCode, playerCount = 0) {
@@ -76,18 +77,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Funzione per aggiornare il conteggio giocatori di una stanza
-  function updateRoomPlayerCount(roomCode, playerCount) {
-    const roomItem = roomsListContainer.querySelector(
-      `[data-room-code="${roomCode}"]`
-    );
-    if (roomItem) {
-      const playerInfo = roomItem.querySelector(".room-item-info p");
-      if (playerInfo) {
-        playerInfo.textContent = `${playerCount} giocator${
-          playerCount === 1 ? "e" : "i"
-        }`;
-      }
+  function updateRooms() {
+    while (roomsListContainer.firstChild) {
+      roomsListContainer.removeChild(roomsListContainer.firstChild);
     }
+    roomList.forEach((room) => {
+      addRoomToUI(room.code, room.playerCount);
+    });
   }
 
   ServerBtn.addEventListener("click", () => {
@@ -137,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const uniqueCode = crypto.randomUUID();
     user.userCode = "user" + uniqueCode;
     console.log(user.userCode);
+    roomList = [];
 
     socket.on("server message|" + user.userCode, (msg) => {
       console.log("Message from server with user: " + msg);
@@ -193,29 +190,40 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "006":
         // Nuova stanza creata - broadcast a tutti i client
-        let roomCode = msg.slice(msg.indexOf(":") + 1).trim();
-        console.log("New room broadcast received: " + roomCode);
+        let sroom = msg.slice(msg.indexOf(":") + 1).trim();
+        console.log("New room broadcast received: " + sroom);
+        let troom;
+        try {
+          troom = JSON.parse(sroom);
+        } catch (error) {
+          console.error("Invalid JSON received:", sroom);
+          return; // Esci dalla funzione se il JSON non è valido
+        }
 
         // Aggiungi alla lista locale se non presente
-        if (!roomList.includes(roomCode)) {
+        if (!roomList) {
+          roomList.push(troom);
+          console.log("room added in the room list: " + sroom);
+
+          // Aggiungi alla UI
+
+        }else if (!roomList.includes(roomCode)) {
           roomList.push(roomCode);
           console.log("room added in the room list: " + roomCode);
 
           // Aggiungi alla UI
-          addRoomToUI(roomCode, 0);
         }
+        updateRooms();
         break;
       case "008":
         // Aggiornamento conteggio giocatori in una stanza
-        let parts = msg.slice(msg.indexOf(":") + 1).split("|");
-        let roomCodeUpdate = parts[0].trim();
-        let playerCount = parseInt(parts[1].trim());
+        let sroomList = msg.slice(msg.indexOf("|") + 1);
+        let roomList = JSON.parse(sroomList);
         console.log(
-          "Room " + roomCodeUpdate + " now has " + playerCount + " players"
+          "Rooms " + sroomList
         );
 
-        // Aggiorna il conteggio nella UI
-        updateRoomPlayerCount(roomCodeUpdate, playerCount);
+        updateRooms();
         break;
     }
   });

@@ -111,6 +111,8 @@ function addUser(msg, socket) {
             userNameChaged
         );
         socket.emit(msgName, "004 new userName saved:" + target.userName);
+        let userRoomList = getUserRoomList();
+        socket.emit(msgName, "008 roomUpdate:"+JSON.stringify(userRoomList));
         break;
       case "104":
         let roomCode = msg.slice(msg.indexOf(":") + 1).trim();
@@ -140,7 +142,8 @@ function addUser(msg, socket) {
           // Conferma personale al creatore
           socket.emit(msgName, "005 room created:" + roomCode);
           // Broadcast a tutti i client della nuova stanza
-          io.emit("server message", "006 new room:" + roomCode);
+          let userRoomTargetList = getUserRoomList();
+          io.emit("server message", "006 new room:" + JSON.stringify(userRoomTargetList));
         } else {
           // Stanza esistente - verifica che non sia già dentro
           const alreadyInRoom = roomTarget.players.some(p => p.userCode === target.userCode);
@@ -164,12 +167,14 @@ function addUser(msg, socket) {
         
         target.room = roomCode;
         roomTarget.players.push(target);
+        roomTarget.playerCount += 1;
         console.log(
           "The user " + target.userName + " joined the room " + roomCode
         );
         
         // Broadcast aggiornamento conteggio giocatori
-        io.emit("server message", "008 room update:" + roomCode + "|" + roomTarget.players.length);
+        let TuserRoomList = getUserRoomList();
+        socket.emit("server message", "008 roomUpdate:"+JSON.stringify(TuserRoomList));
         break;
     }
   });
@@ -203,6 +208,7 @@ function addRoom(roomCode, socket) {
   let room = {
     code: roomCode,
     players: [],
+    playerCount: 0,
     turnIndex: -1,
     turnCode: "",
     time: null,
@@ -213,4 +219,20 @@ function addRoom(roomCode, socket) {
   console.log("Registered new room:", rooms[rooms.length - 1]);
   
   return findRoom(roomCode);
+}
+
+function getUserRoomList(){
+  let userRoomList = [];
+  rooms.forEach((room) => {
+    let tRoom = {
+      code: room.code,
+      playerCount: room.playerCount
+    };
+    userRoomList.push(tRoom); 
+  });
+  return userRoomList;
+}
+
+function updateRoomsToPlayers(socket){
+
 }
