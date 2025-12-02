@@ -1,24 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Include Socket.IO client library -->
     <script src="/socket.io/socket.io.js"></script>
     <!-- Include script.js -->
     <script type="module" src="/js/script.js" defer></script>
     <!-- Include style.css -->
-    <link rel="stylesheet" href="/css/style.css">
-    <title>SocketBomb</title>
-</head>
-<body>
+    <link rel="stylesheet" href="/css/style.css" />
+    <title>SocketBomb - Patata Bollente</title>
+  </head>
+  <body>
+    <!-- Tavolo da gioco principale -->
+    <div class="table">
+      <div class="felt">
+        
+        <!-- SCHERMATA 1: Inserimento Username -->
+        <section id="username-screen" class="screen active">
+          <div class="welcome-card">
+            <h1 class="game-title">🔥 SocketBomb 🔥</h1>
+            <p class="game-subtitle">Gioco della Patata Bollente</p>
+            
+            <div class="input-group">
+              <label for="usernameInput">Inserisci il tuo nome</label>
+              <input
+                id="usernameInput"
+                name="username"
+                type="text"
+                placeholder="Il tuo nome"
+                maxlength="32"
+                required
+                aria-required="true"
+                autocomplete="username"
+              />
+              <button id="setUsernameBtn" class="btn-primary" type="button">
+                Conferma
+              </button>
+            </div>
+            <p id="usernameHelp" class="help-text" aria-live="polite"></p>
+          </div>
+        </section>
 
-        <button id="serverBtn">
-            <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Server</label>
-        </button>
-        <button id="clientBtn">
-            <label for="start-game" aria-label="Inizia una nuova partita">Test collegamento Client</label>
-        </button>
+        <!-- SCHERMATA 2: Lista Stanze -->
+        <section id="room-list-screen" class="screen">
+          <div class="room-container">
+            <div class="room-header">
+              <h2>Stanze disponibili</h2>
+              <p class="user-info">Benvenuto, <span id="displayUsername">Utente</span>!</p>
+            </div>
 
-</body>
+            <div class="room-actions">
+              <div class="input-group inline">
+                <input
+                  id="roomInput"
+                  name="room"
+                  type="text"
+                  placeholder="Nome stanza"
+                  maxlength="20"
+                />
+                <button id="createRoomBtn" class="btn-primary" type="button">
+                  Crea Stanza
+                </button>
+              </div>
+            </div>
+
+            <div class="rooms-list" id="roomsList">
+              <!-- Le stanze verranno aggiunte dinamicamente qui -->
+              <div class="empty-rooms">
+                <p>Nessuna stanza disponibile</p>
+                <p class="hint">Crea la prima stanza!</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHERMATA 3: Area di Gioco -->
+        <section id="game-screen" class="screen">
+          <div class="game-container">
+            
+            <!-- Header con info partita -->
+            <div class="game-header">
+              <div class="room-info">
+                <span class="label">Stanza:</span>
+                <span id="currentRoomName">-</span>
+              </div>
+              <button id="leaveRoomBtn" class="btn-secondary small">Esci</button>
+            </div>
+
+            <!-- Area giocatori -->
+            <div class="players-area">
+              <h3>Giocatori</h3>
+              <div id="playersList" class="players-grid">
+                <!-- Giocatori aggiunti dinamicamente -->
+              </div>
+            </div>
+
+            <!-- Area bomba centrale -->
+            <div class="bomb-area">
+              <div id="bombIndicator" class="bomb">
+                💣
+              </div>
+              <div class="bomb-timer">
+                <span id="timerDisplay">--</span>
+              </div>
+              <p id="turnIndicator" class="turn-text">In attesa...</p>
+            </div>
+
+            <!-- Area lettere da digitare -->
+            <div class="typing-area">
+              <div id="letterSequence" class="letter-sequence">
+                <!-- Lettere generate dal server -->
+              </div>
+              <div class="timing-bar">
+                <div id="timingIndicator" class="timing-fill"></div>
+              </div>
+              <p id="typingFeedback" class="feedback-text"></p>
+            </div>
+
+            <!-- Controlli di gioco -->
+            <div class="game-controls">
+              <button id="readyBtn" class="btn-primary">Pronto!</button>
+              <button id="startGameBtn" class="btn-success" disabled>Inizia Partita</button>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Area Debug (separata, in basso a destra) -->
+    <aside class="debug-panel">
+      <details>
+        <summary>🔧 Debug</summary>
+        <div class="debug-content">
+          <button id="serverBtn" class="btn-debug">Test Server</button>
+          <button id="clientBtn" class="btn-debug">Test Client</button>
+          <div class="debug-info">
+            <p><small>UserCode: <span id="debugUserCode">-</span></small></p>
+            <p><small>Room: <span id="debugRoom">-</span></small></p>
+          </div>
+        </div>
+      </details>
+    </aside>
+
+  </body>
 </html>
