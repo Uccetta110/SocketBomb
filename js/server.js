@@ -65,12 +65,14 @@ server.listen(PORT, () => {
 
 function addUser(msg, socket) {
   let ipClient = msg.slice(msg.indexOf(":") + 1, msg.indexOf("|")).trim();
-  let userCode = msg.slice(msg.indexOf(";") + 1).trim();
+  let userCode = msg.slice(msg.indexOf(";") + 1, msg.indexOf("!")).trim();
+  let userAvatar = msg.slice(msg.indexOf("§") + 1).trim();
   let user = {
     ipClient: ipClient,
     userCode: userCode,
     username: "",
     room: -1,
+    avatar: userAvatar
   };
   users.push(user);
   console.log("Registered new user:", users[users.length - 1]);
@@ -90,16 +92,11 @@ function addUser(msg, socket) {
 
         if (!target) {
           console.log(`User with code ${UserCode} not found`);
-          socket.emit(msgName, "201 user not found");
+          io.emit(msgName, "201 user not found");
           return;
         }
         target.userName = userName;
-        socket.emit(msgName, "003 userName saved:" + userName);
-        break;
-      case "301":
-        let ipClient = msg.slice(msg.indexOf(":") + 1).trim();
-        target.ipClient = ipClient;
-        io.emit(msgName, "002 is your IP:" + ipClient);
+        io.emit(msgName, "003 userName saved:" + userName);
         break;
       case "103":
         let userNameChaged = msg.slice(msg.indexOf(":") + 1).trim();
@@ -110,21 +107,24 @@ function addUser(msg, socket) {
             " is " +
             userNameChaged
         );
-        socket.emit(msgName, "004 new userName saved:" + target.userName);
+        io.emit(msgName, "004 new userName saved:" + target.userName);
+        updateRoomsToPlayers();
         break;
       case "104":
         let roomCode = msg.slice(msg.indexOf(":") + 1).trim();
         let roomTarget = findRoom(roomCode);
-        
+
         // Verifica se l'utente è già in una stanza
         if (target.room !== -1) {
-          console.log("User " + target.userName + " is already in room " + target.room);
-          socket.emit(msgName, "201 already in a room");
+          console.log(
+            "User " + target.userName + " is already in room " + target.room
+          );
+          io.emit(msgName, "201 already in a room");
           return;
         }
-        
+
         let isNewRoom = false;
-        
+
         if (!roomTarget) {
           // Stanza nuova - creala
           roomTarget = addRoom(roomCode, socket);
@@ -138,18 +138,19 @@ function addUser(msg, socket) {
               target.userCode
           );
           // Conferma personale al creatore
-          socket.emit(msgName, "005 room created:" + roomCode);
+          io.emit(msgName, "005 room created:" + roomCode);
           // Broadcast a tutti i client della nuova stanza
-          io.emit("server message", "006 new room:" + roomCode);
         } else {
           // Stanza esistente - verifica che non sia già dentro
-          const alreadyInRoom = roomTarget.players.some(p => p.userCode === target.userCode);
+          const alreadyInRoom = roomTarget.players.some(
+            (p) => p.userCode === target.userCode
+          );
           if (alreadyInRoom) {
             console.log("User " + target.userName + " already in this room");
-            socket.emit(msgName, "201 already in this room");
+            io.emit(msgName, "201 already in this room");
             return;
           }
-          
+
           console.log(
             "Room " +
               roomCode +
@@ -159,17 +160,37 @@ function addUser(msg, socket) {
               target.userCode
           );
           // Conferma personale a chi fa join
-          socket.emit(msgName, "007 joined room:" + roomCode);
+          io.emit(msgName, "007 joined room:" + roomCode);
+          target.roomCode = roomCode;
+          io.emit(
+            msgName,
+            "009 user room details:" + JSON.stringify(roomTarget)
+          );
         }
-        
+
         target.room = roomCode;
         roomTarget.players.push(target);
+        roomTarget.playerCount += 1;
         console.log(
           "The user " + target.userName + " joined the room " + roomCode
         );
-        
-        // Broadcast aggiornamento conteggio giocatori
-        io.emit("server message", "008 room update:" + roomCode + "|" + roomTarget.players.length);
+
+        updateRoomsToPlayers();
+        break;
+      case "301":
+        let ipClient = msg.slice(msg.indexOf(":") + 1).trim();
+        target.ipClient = ipClient;
+        io.emit(msgName, "002 is your IP:" + ipClient);
+        break;
+      case "302":
+        if (!target.roomCode) {
+          io.emit(msgName, "010 you are not in any room");
+        } else sendRoomInfoToUser(target);
+        break;
+      case "303":
+        if (!target.roomCode) {
+          io.emit(msgName, "010 you are not in any room");
+        } else sendRoomInfoToUser(target);
         break;
     }
   });
@@ -203,6 +224,7 @@ function addRoom(roomCode, socket) {
   let room = {
     code: roomCode,
     players: [],
+    playerCount: 0,
     turnIndex: -1,
     turnCode: "",
     time: null,
@@ -211,6 +233,28 @@ function addRoom(roomCode, socket) {
 
   rooms.push(room);
   console.log("Registered new room:", rooms[rooms.length - 1]);
-  
+
   return findRoom(roomCode);
+}
+
+function getUserRoomList() {
+  let userRoomList = [];
+  rooms.forEach((room) => {
+    let tRoom = {
+      code: room.code,
+      playerCount: room.playerCount,
+    };
+    userRoomList.push(tRoom);
+  });
+  return userRoomList;
+}
+
+function updateRoomsToPlayers(socket) {
+  let userRoomList = getUserRoomList();
+  io.emit("server message", "008 roomUpdate:" + JSON.stringify(userRoomList));
+}
+
+function sendRoomInfoToUser(target) {
+  let roomTarget = findRoom(target.roomCode);
+  io.emit("server message|" + target.userCode, "009 user room details:" + JSON.stringify(roomTarget));
 }
