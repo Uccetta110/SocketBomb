@@ -37,6 +37,7 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 | **006** | `broadcast nuova stanza: + <room.code>` |
 | **007** | `broadcast join stanza: + <room.code>` |
 | **008** | `broadcast player count per stanza: + <room.code> + <playerCount>` |
+| **009** | `update to player his room status: + <room>` |
 
 ---
 
