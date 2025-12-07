@@ -72,7 +72,7 @@ function addUser(msg, socket) {
     userCode: userCode,
     username: "",
     room: -1,
-    avatar: userAvatar
+    avatar: userAvatar,
   };
   users.push(user);
   console.log("Registered new user:", users[users.length - 1]);
@@ -108,7 +108,7 @@ function addUser(msg, socket) {
             userNameChaged
         );
         io.emit(msgName, "004 new userName saved:" + target.userName);
-        updateRoomsToPlayers();
+        updateRoomsToAllPlayers();
         break;
       case "104":
         let roomCode = msg.slice(msg.indexOf(":") + 1).trim();
@@ -122,8 +122,6 @@ function addUser(msg, socket) {
           io.emit(msgName, "201 already in a room");
           return;
         }
-
-        let isNewRoom = false;
 
         if (!roomTarget) {
           // Stanza nuova - creala
@@ -161,11 +159,7 @@ function addUser(msg, socket) {
           );
           // Conferma personale a chi fa join
           io.emit(msgName, "007 joined room:" + roomCode);
-          target.roomCode = roomCode;
-          io.emit(
-            msgName,
-            "009 user room details:" + JSON.stringify(roomTarget)
-          );
+          updateRoomInfo(roomTarget);
         }
 
         target.room = roomCode;
@@ -175,7 +169,7 @@ function addUser(msg, socket) {
           "The user " + target.userName + " joined the room " + roomCode
         );
 
-        updateRoomsToPlayers();
+        updateRoomsToAllPlayers();
         break;
       case "301":
         let ipClient = msg.slice(msg.indexOf(":") + 1).trim();
@@ -249,12 +243,22 @@ function getUserRoomList() {
   return userRoomList;
 }
 
-function updateRoomsToPlayers(socket) {
+function updateRoomsToAllPlayers() {
   let userRoomList = getUserRoomList();
   io.emit("server message", "008 roomUpdate:" + JSON.stringify(userRoomList));
 }
 
+function updateRoomInfo(roomTarget) {
+  roomTarget.players.forEach((player) => {
+    const target = findUser(player.UserCode)
+    sendRoomInfoToUser(target);
+  });
+}
+
 function sendRoomInfoToUser(target) {
   let roomTarget = findRoom(target.roomCode);
-  io.emit("server message|" + target.userCode, "009 user room details:" + JSON.stringify(roomTarget));
+  io.emit(
+    "server message|" + target.userCode,
+    "009 user room details:" + JSON.stringify(roomTarget)
+  );
 }

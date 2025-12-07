@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateRoom() {
-
+    
   }
 
   initialize();
