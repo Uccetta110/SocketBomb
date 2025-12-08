@@ -560,9 +560,27 @@ function startBombTimer(room) {
     // Controlla se il giocatore sta impiegando troppo tempo sulla lettera corrente
     const timeSinceLastLetter = Date.now() - room.lastLetterTime;
     if (timeSinceLastLetter >= room.letterTimer && room.currentLetterIndex < room.currentSequence.length) {
-      console.log(`Player took too long on letter ${room.currentLetterIndex + 1}! Time: ${timeSinceLastLetter}ms, Limit: ${room.letterTimer}ms`);
-      clearInterval(room.gameInterval);
-      explodeBomb(room);
+      console.log(`Player took too long on letter ${room.currentLetterIndex + 1}! Penalty: -5 seconds`);
+      
+      // Penalità: toglie 5 secondi dal timer della bomba e resetta la sequenza
+      room.bombTimer = Math.max(0, room.bombTimer - 5);
+      room.currentLetterIndex = 0; // Reset alla prima lettera
+      room.lastLetterTime = Date.now(); // Reset il timer per evitare penalità multiple
+      
+      // Notifica tutti i giocatori del timeout
+      const currentPlayer = findUser(room.turnCode);
+      if (currentPlayer.userCode !== "notfound") {
+        io.emit("server message|" + currentPlayer.userCode, "021 letter timeout");
+      }
+      
+      // Se il timer scende a 0 o meno, bomba esplode
+      if (room.bombTimer <= 0) {
+        clearInterval(room.gameInterval);
+        explodeBomb(room);
+        return;
+      }
+      
+      broadcastGameState(room);
       return;
     }
     
@@ -607,9 +625,15 @@ function handleLetterError(target) {
 
   if (room.turnCode !== target.userCode) return;
 
-  // Applica penalità di 0.5 secondi
-  room.bombTimer = Math.max(1, room.bombTimer - 0.5);
-  console.log(`Player ${target.userName} made an error! Penalty applied. Timer: ${room.bombTimer}s`);
+  // Applica penalità di 0.5 secondi e resetta la sequenza
+  room.bombTimer = Math.max(1, room.bombTimer - 1);
+  room.currentLetterIndex = 0; // Reset alla prima lettera
+  room.lastLetterTime = Date.now(); // Reset il timer
+  
+  console.log(`Player ${target.userName} made an error! Penalty applied. Timer: ${room.bombTimer}s. Sequence reset.`);
+  
+  // Notifica il client di resettare la sequenza
+  io.emit("server message|" + target.userCode, "020 sequence reset");
   
   broadcastGameState(room);
 }
@@ -644,6 +668,7 @@ function explodeBomb(room) {
 
   // Rimuovi il perdente dopo un delay per l'animazione
   setTimeout(() => {
+    // Rimuovi il perdente dalla stanza ma non dalla lista users
     removePlayerFromRoom(room, loserUserCode, false);
     loser.room = -1;
     loser.ready = false;
@@ -657,13 +682,8 @@ function explodeBomb(room) {
       room.turnIndex = room.turnIndex % room.playerCount;
       room.roundNumber += 1;
       startNewRound(room);
-    } else {
-      // Stanza vuota
-      const roomIndex = rooms.findIndex((r) => r.code === room.code);
-      if (roomIndex !== -1) {
-        rooms.splice(roomIndex, 1);
-      }
     }
+    // Nota: Non eliminiamo più la stanza anche se vuota dopo la vittoria
     
     updateRoomsToAllPlayers();
   }, 2000);
@@ -679,11 +699,10 @@ function endGame(room, winnerUserCode) {
   
   console.log("Game ended! Winner: " + winner.userName);
   
-  room.players.forEach((player) => {
-    io.emit("server message|" + player.userCode, "018 game ended, winner:" + winnerUserCode);
-  });
+  // Notifica tutti i giocatori (solo il vincitore è ancora nella room)
+  io.emit("server message|" + winnerUserCode, "018 game ended, winner:" + winnerUserCode);
 
-  // Reset room dopo 5 secondi
+  // Reset room dopo 5 secondi - il vincitore rimane nella stanza
   setTimeout(() => {
     room.state = "waiting";
     room.turnIndex = -1;
@@ -692,7 +711,10 @@ function endGame(room, winnerUserCode) {
     room.currentSequence = [];
     room.sequenceLength = 3;
     room.roundNumber = 1;
+    room.currentLetterIndex = 0;
+    room.lastLetterTime = 0;
     
+    // Il vincitore rimane nella stanza e può giocare di nuovo
     room.players.forEach((p) => {
       p.ready = false;
       const user = findUser(p.userCode);
@@ -701,7 +723,9 @@ function endGame(room, winnerUserCode) {
       }
     });
     
+    console.log("Room " + room.code + " reset. Winner " + winner.userName + " stays in room.");
     updateRoomInfo(room);
+    updateRoomsToAllPlayers();
   }, 5000);
 }
 

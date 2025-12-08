@@ -546,10 +546,12 @@ document.addEventListener("DOMContentLoaded", () => {
         case "018":
           // Game ended
           let winnerCode = msg.slice(msg.indexOf(":") + 1).trim();
-          const winner = room.players.find((p) => p.userCode === winnerCode);
-          if (winner) {
-            alert(`🎉 ${winner.userName} ha vinto la partita!`);
+          if (winnerCode === user.userCode) {
+            // Hai vinto! Rimani nella stanza
+            alert("🎉 Hai vinto la partita! Rimani nella stanza per giocare ancora.");
+            user.ready = false;
           }
+          // I perdenti sono già stati rimossi dalla stanza
           break;
         case "019":
           // Game state update
@@ -593,6 +595,22 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch (error) {
             console.error("Invalid game state JSON:", error);
           }
+          break;
+        case "020":
+          // Sequence reset (errore di battitura)
+          gameState.currentLetterIndex = 0;
+          gameState.letterStartTime = Date.now();
+          displayLetterSequence();
+          showFeedback("❌ Errore! Riparti dall'inizio della sequenza", "error");
+          console.log("Sequenza resettata dopo errore");
+          break;
+        case "021":
+          // Letter timeout
+          gameState.currentLetterIndex = 0;
+          gameState.letterStartTime = Date.now();
+          displayLetterSequence();
+          showFeedback("⏱️ Tempo scaduto! -5 secondi e riparti dall'inizio", "error");
+          console.log("Sequenza resettata dopo timeout");
           break;
       }
     });
