@@ -94,8 +94,8 @@ function addUser(msg, socket) {
           io.emit(msgName, "201 user not found");
           return;
         }
-        target.userName = userName;
-        io.emit(msgName, "003 userName saved:" + userName);
+        changeUserName(userName, userCode, target);
+
         break;
       case "103":
         let userNameChaged = msg.slice(msg.indexOf(":") + 1).trim();
@@ -134,6 +134,7 @@ function addUser(msg, socket) {
               " | " +
               target.userCode
           );
+
           // Conferma personale al creatore
           io.emit(msgName, "005 room created:" + roomCode);
           // Broadcast a tutti i client della nuova stanza
@@ -158,7 +159,6 @@ function addUser(msg, socket) {
           );
           // Conferma personale a chi fa join
           io.emit(msgName, "007 joined room:" + roomCode);
-          updateRoomInfo(roomTarget);
         }
 
         target.room = roomCode;
@@ -169,6 +169,7 @@ function addUser(msg, socket) {
         );
 
         updateRoomsToAllPlayers();
+        updateRoomInfo(roomTarget);
         break;
       case "301":
         let ipClient = msg.slice(msg.indexOf(":") + 1).trim();
@@ -213,7 +214,7 @@ function findRoom(roomCode) {
   return target;
 }
 
-function addRoom(roomCode, socket) {
+function addRoom(roomCode) {
   let room = {
     code: roomCode,
     players: [],
@@ -249,7 +250,7 @@ function updateRoomsToAllPlayers() {
 
 function updateRoomInfo(roomTarget) {
   roomTarget.players.forEach((player) => {
-    const target = findUser(player.userCode)
+    const target = findUser(player.userCode);
     sendRoomInfoToUser(target);
   });
 }
@@ -260,4 +261,14 @@ function sendRoomInfoToUser(target) {
     "server message|" + target.userCode,
     "009 user room details:" + JSON.stringify(roomTarget)
   );
+}
+
+function changeUserName(userName, userCode, target) {
+  target.userName = userName;
+  io.emit("server message|"+userCode, "003 userName saved:" + userName);
+  if (target.room != -1) {
+    let room = findRoom(target.room);
+    const targetInRoom = room.players.find((r) => r.userCode == userCode);
+    targetInRoom.userName = userName;
+  }
 }

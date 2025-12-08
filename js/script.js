@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Funzione per aggiornare la lista giocatori nella game screen
-  function updatePlayersList() {
+  function updatePlayersListUpdate() {
     console.log("updatePlayerList");
     if (!room.players) {
       console.log("l'array room.players non esiste");
@@ -314,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
     roomIdLabel.textContent = room.code;
 
     // Aggiorna la lista giocatori se disponibile
-    updatePlayersList();
+    updatePlayersListUpdate();
   }
 
   initialize();
