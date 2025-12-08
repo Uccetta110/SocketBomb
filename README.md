@@ -40,6 +40,8 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 | **017** | `you lost, eliminated` |
 | **018** | `game ended, winner: <winnerUserCode>` |
 | **019** | `game state: <JSON.stringify(gameState)>` |
+| **020** | `sequence reset` |
+| **021** | `letter timeout` |
 
 ---
 
