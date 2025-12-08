@@ -17,10 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Sockets
   const socket = io();
 
+  //test
+  const testing = false;
+
   // User state
   let user = {
-    isServer: false,
-    isClient: false,
     ipClient: "192.168.0.165",
     userCode: "",
     userName: "Uccetta110",
@@ -147,6 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     console.log("Username Confirm button clicked, username: " + username);
     user.userName = username;
+    document.cookie = "userName=" + username + "; max-age=86400; path=/";
 
     // Aggiorna il nome visualizzato nella schermata stanze
     displayUsername.textContent = username;
@@ -174,12 +176,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const initialize = () => {
     // Generate a unique user code
-    const uniqueCode = crypto.randomUUID();
-    user.userCode = "user" + uniqueCode;
+    const userCode = getCookie("userCode");
+    const userName = getCookie("userName");
+
+    if (userCode == null || testing) {
+      const uniqueCode = crypto.randomUUID();
+      user.userCode = "user" + uniqueCode;
+    } else {
+      user.userCode = userCode;
+    }
     console.log(user.userCode);
+    document.cookie = "userCode=" + user.userCode + "; max-age=86400; path=/";
+
     const avatar = "avatar" + (Math.floor(Math.random() * 17) + 1);
     user.avatar = avatar;
     roomList = [];
+
+    if (userName == null || testing) {
+    } else {
+      user.userName = userName;
+      displayUsername.textContent = userName;
+
+      socket.emit(
+        "client message|" + user.userCode,
+        "103 my new username is:" + userName
+      );
+      usernameScreen.classList.remove("active");
+      roomScreen.classList.add("active");
+    }
 
     socket.on("server message|" + user.userCode, (msg) => {
       console.log("Message from server with user: " + msg);
@@ -246,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     switch (msg.slice(0, 3)) {
       case "001":
-        user.isClient = true;
         socket.emit(
           msgName,
           "101 this client ip is:" +
@@ -315,6 +338,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Aggiorna la lista giocatori se disponibile
     updatePlayersListUpdate();
+  }
+
+  function getCookie(name) {
+    const cookies = document.cookie.split("; ");
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+      if (key === name) return value;
+    }
+    return null;
   }
 
   initialize();

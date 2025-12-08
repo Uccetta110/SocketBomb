@@ -42,14 +42,22 @@ io.on("connection", (socket) => {
     msg = msg.slice(4);
     switch (msgCode) {
       case "101":
-        addUser(msg, socket);
+        addUser(msg, socket, socket.id);
         break;
     }
   });
 
   // Handle disconnection
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
+  socket.on("disconnect", (reason) => {
+    const target = findUserFromId(socket.id);
+    console.log(
+      "Utente disconnesso: " +
+        target.userName +
+        " userCode: " +
+        target.userCode +
+        " Motivo: " +
+        reason
+    );
   });
 });
 
@@ -66,9 +74,16 @@ function addUser(msg, socket) {
   let ipClient = msg.slice(msg.indexOf(":") + 1, msg.indexOf("|")).trim();
   let userCode = msg.slice(msg.indexOf(";") + 1, msg.indexOf("!")).trim();
   let userAvatar = msg.slice(msg.indexOf("§") + 1).trim();
+  const target = findUser(userCode);
+  if (target.userCode != "notfound") {
+    target.online = true;
+    return;
+  }
   let user = {
     ipClient: ipClient,
     userCode: userCode,
+    socketid: socket.id,
+    online: true,
     username: "",
     room: -1,
     avatar: userAvatar,
@@ -204,6 +219,21 @@ function findUser(userCode) {
   return target;
 }
 
+function findUserFromId(socketid) {
+  const target = users.find((u) => u.socketid == socketid);
+  if (!target) {
+    console.log("user with socketid:" + socketid + " not found ");
+    return {
+      userCode: "notfound",
+      ipClient: "notfound",
+      userName: "notfound",
+      socketid: "notfound",
+    };
+  }
+
+  return target;
+}
+
 function findRoom(roomCode) {
   const target = rooms.find((r) => r.code == roomCode);
   if (!target) {
@@ -265,10 +295,44 @@ function sendRoomInfoToUser(target) {
 
 function changeUserName(userName, userCode, target) {
   target.userName = userName;
-  io.emit("server message|"+userCode, "003 userName saved:" + userName);
+  io.emit("server message|" + userCode, "003 userName saved:" + userName);
   if (target.room != -1) {
     let room = findRoom(target.room);
     const targetInRoom = room.players.find((r) => r.userCode == userCode);
     targetInRoom.userName = userName;
   }
+}
+
+async function disconnectedUser(target) {
+  target.online = false;
+  let timer = 30;
+  while (time > 0) {
+    await sleep(1000);
+    if (target.online == true) {
+      return;
+    }
+    timer--;
+  }
+  if (target.room != -1) {
+    let room = findRoom(target.room);
+    const index = room.players.findIndex((r) => r.userCode == target.userCode);
+    if (index !== -1) {
+      room.players.splice(index, 1);
+      room.playerCount -= 1;
+      updateRoomInfo(room);
+    }
+  }
+  io.emit(
+    "server message",
+    "011 broadcast user disconnection:" + target.userCode
+  );
+}
+
+// ===========================================================================================
+// |                                                                                         |
+// |                                                                                         |
+// ===========================================================================================
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
