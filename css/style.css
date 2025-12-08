@@ -283,6 +283,10 @@ body::before {
   padding: 12px;
   text-align: center;
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .player-card.active {
@@ -296,10 +300,22 @@ body::before {
   background: #f0fdf4;
 }
 
+.player-card .player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e2e8f0;
+}
+
+.player-card.active .player-avatar {
+  border-color: #dc2626;
+}
+
 .player-card .player-name {
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 4px;
+  font-size: 0.95rem;
 }
 
 .player-card .player-status {

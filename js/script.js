@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const displayUsername = document.getElementById("displayUsername");
   const gameContainter = document.getElementById("game-screen");
   const roomIdLabel = document.getElementById("currentRoomName");
+  const playersListContainer = document.getElementById("playersList");
 
   // Sockets
   const socket = io();
@@ -85,6 +86,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     roomList.forEach((room) => {
       addRoomToUI(room.code, room.playerCount);
+    });
+  }
+
+  // Funzione per aggiornare la lista giocatori nella game screen
+  function updatePlayersList() {
+    console.log("updatePlayerList");
+    if (!room.players) {
+      console.log("l'array room.players non esiste");
+    } else if (!Array.isArray(room.players)) {
+      console.log("l'array room.players non è un array");
+    }
+    const players = room.players;
+    console.log("Updating players list with:", players);
+
+    // Svuota la lista esistente
+    while (playersListContainer.firstChild) {
+      playersListContainer.removeChild(playersListContainer.firstChild);
+    }
+
+    // Aggiungi ogni giocatore
+    players.forEach((player) => {
+      const playerCard = document.createElement("div");
+      playerCard.className = "player-card";
+      playerCard.dataset.userCode = player.userCode;
+
+      // Aggiungi classe 'active' se è il turno del giocatore
+      if (room.turnCode === player.userCode) {
+        playerCard.classList.add("active");
+      }
+
+      const avatarPath = `../assets/images/avatars/${
+        player.avatar || "avatar1"
+      }.png`;
+      const playerName = player.userName || "Giocatore";
+
+      playerCard.innerHTML = `
+        <img src="${avatarPath}" alt="${playerName}" class="player-avatar" onerror="this.src='../assets/images/avatars/avatar1.png'" />
+        <div class="player-name">${playerName}</div>
+      `;
+
+      playersListContainer.appendChild(playerCard);
     });
   }
 
@@ -174,15 +216,21 @@ document.addEventListener("DOMContentLoaded", () => {
         case "009":
           let sroom = msg.slice(msg.indexOf(":") + 1).trim();
           console.log("room updated by the server: " + sroom);
-          if (!sroom) {
+          if (sroom) {
             try {
-              room = JSON.parse(sroom);
+              const roomData = JSON.parse(sroom);
+              room = roomData;
+              console.log("Room data updated:", room);
+
+              // Aggiorna l'interfaccia
+              updateRoom();
             } catch (error) {
-              console.error("Invalid JSON received:", sroom);
+              console.error("Invalid JSON received:", sroom, error);
               socket.emit(msgName, "303 JSON room not valid:" + sroom);
             }
           } else {
-            socket.emit(msgName, "302 room epmty:" + sroom);
+            console.error("Empty room data received");
+            socket.emit(msgName, "302 room empty");
           }
           break;
       }
@@ -204,9 +252,9 @@ document.addEventListener("DOMContentLoaded", () => {
           "101 this client ip is:" +
             user.ipClient +
             "| this client code is;" +
-            user.userCode + 
-            "! this client avatar is§"
-            + user.avatar
+            user.userCode +
+            "! this client avatar is§" +
+            user.avatar
         );
         break;
       case "006":
@@ -259,11 +307,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function enterRoom() {
     roomScreen.classList.remove("active");
     gameContainter.classList.add("active");
-    roomIdLabel.textContent=room.code;
+    roomIdLabel.textContent = room.code;
   }
 
   function updateRoom() {
-    
+    roomIdLabel.textContent = room.code;
+
+    // Aggiorna la lista giocatori se disponibile
+    updatePlayersList();
   }
 
   initialize();

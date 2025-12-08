@@ -62,7 +62,6 @@ server.listen(PORT, () => {
 // |                                                                                         |
 // |                                                                                         |
 // ===========================================================================================
-
 function addUser(msg, socket) {
   let ipClient = msg.slice(msg.indexOf(":") + 1, msg.indexOf("|")).trim();
   let userCode = msg.slice(msg.indexOf(";") + 1, msg.indexOf("!")).trim();
@@ -250,13 +249,13 @@ function updateRoomsToAllPlayers() {
 
 function updateRoomInfo(roomTarget) {
   roomTarget.players.forEach((player) => {
-    const target = findUser(player.UserCode)
+    const target = findUser(player.userCode)
     sendRoomInfoToUser(target);
   });
 }
 
 function sendRoomInfoToUser(target) {
-  let roomTarget = findRoom(target.roomCode);
+  let roomTarget = findRoom(target.room);
   io.emit(
     "server message|" + target.userCode,
     "009 user room details:" + JSON.stringify(roomTarget)
