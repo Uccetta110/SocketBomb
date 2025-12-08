@@ -39,6 +39,7 @@ I messaggi scambiati tra **server** e **client** seguono questo schema:
 | **008** | `008 roomUpdate: + <userRoomList>.toJson` |
 | **009** | `update to player his room status: + <room>` |
 | **010** | `you are not in any room` |
+| **011** | `broadcast user disconnection: <user.userCode>` |
 
 ---
 
