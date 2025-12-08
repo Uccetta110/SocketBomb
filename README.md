@@ -4,13 +4,6 @@ Un progetto scolastico per comunicazione **client ↔ server** tramite **Socket.
 
 ---
 
-## 👥 Partecipanti
-- **DemoTV**
-- **Uccetta110**
-- **Nnhbvfc104**
-
----
-
 ## 📡 Struttura dei Codici Messaggi
 
 I messaggi scambiati tra **server** e **client** seguono questo schema:
