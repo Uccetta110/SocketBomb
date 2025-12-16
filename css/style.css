@@ -659,8 +659,8 @@ button:disabled {
 }
 
 .virtual-key {
-  width: 36px;
-  height: 48px;
+  width: 18px;
+  height: 24px;
   border: 2px solid #cbd5e1;
   border-radius: 8px;
   background: white;
